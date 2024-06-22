@@ -17,7 +17,7 @@ O sensor SCT013 é um sensor não invasivo utilizado para ler corrente que passa
 
 ## Aplicações:
 
-Projetos com ESP32 ou outras plataformas microcontroladas em que seja necessário fazer a medição de presença humana em um deteminado local
+Projetos com ESP32 ou outras plataformas microcontroladas em que seja necessário fazer a medição da corrente que alimenta determinada carga
 
 ### Pinagem:
 
