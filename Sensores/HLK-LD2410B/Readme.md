@@ -14,7 +14,7 @@ O sensor LD2410B é utilizado dentro de um ambiente onde se quer monitorar a pre
 
 ## Datasheet:
 
-[Datasheet BMP280](https://github.com/JulioAmaral007/Biodigestor/blob/main/Sensores/Sensor-BMP280/Datasheet%20BMP280.pdf)
+[Datasheet LD2410B](https://github.com/welintonbg/EnergyMonitoring/blob/main/Sensores/HLK-LD2410B/datasheetLD2410B.pdf)
 
 ## Aplicações:
 
