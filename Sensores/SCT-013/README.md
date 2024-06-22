@@ -13,7 +13,7 @@ O sensor SCT013 é um sensor não invasivo utilizado para ler corrente que passa
  - 
 ## Datasheet:
 
-[Datasheet LD2410B](https://github.com/welintonbg/EnergyMonitoring/blob/main/Sensores/HLK-LD2410B/datasheetLD2410B.pdf)
+[Datasheet SCT-013](https://github.com/welintonbg/EnergyMonitoring/blob/main/Sensores/SCT-013/datasheetSCT013.pdf)
 
 ## Aplicações:
 
