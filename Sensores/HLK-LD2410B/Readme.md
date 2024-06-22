@@ -18,7 +18,7 @@ O sensor LD2410B é utilizado dentro de um ambiente onde se quer monitorar a pre
 
 ## Aplicações:
 
-Projetos com ESP32 ou outras plataformas microcontroladas em que seja necessário fazer a medição de pressão atmosférica, temperatura e altitude.
+Projetos com ESP32 ou outras plataformas microcontroladas em que seja necessário fazer a medição de presença humana em um deteminado local
 
 ### Pinagem:
 
