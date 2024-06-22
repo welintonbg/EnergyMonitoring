@@ -16,3 +16,5 @@ Para o esp 32 foram utilizadas as seguintes bibliotecas:
 ```
 
 
+## Instruções de execuções:
+
