@@ -6,7 +6,7 @@
 O sensor LD2410B é utilizado dentro de um ambiente onde se quer monitorar a presença humana em movimento e em repouso.
 
 
-![SensorBMP280](./BMP280.jpg)
+![SensorLD2410B](./LD2410B.png)
 
 ## Especificações e características:
 
