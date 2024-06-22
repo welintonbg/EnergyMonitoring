@@ -1,5 +1,5 @@
 
-# Como usar com ESP32 – Sensor de Presença humana
+# Como usar com ESP32 – Sensor de corrente
 
 ## Descrição:
 
@@ -10,8 +10,7 @@ O sensor SCT013 é um sensor não invasivo utilizado para ler corrente que passa
 
 ## Especificações e características:
 
- - Tensão de operação: 5VDC;
-
+ - 
 ## Datasheet:
 
 [Datasheet LD2410B](https://github.com/welintonbg/EnergyMonitoring/blob/main/Sensores/HLK-LD2410B/datasheetLD2410B.pdf)
