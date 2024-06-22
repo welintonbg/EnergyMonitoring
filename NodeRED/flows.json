@@ -1,0 +1,914 @@
+[
+    {
+        "id": "757b79837df4b9c8",
+        "type": "tab",
+        "label": "Fluxo 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "f2cb0203a2a44b5f",
+        "type": "junction",
+        "z": "757b79837df4b9c8",
+        "x": 260,
+        "y": 420,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b2885cccb707b040",
+        "type": "inject",
+        "z": "757b79837df4b9c8",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"corrente\": 30, \"tensao\":10}",
+        "payloadType": "json",
+        "x": 150,
+        "y": 560,
+        "wires": [
+            [
+                "92d5598b3d4a70fa"
+            ]
+        ]
+    },
+    {
+        "id": "072de195acd7b0fa",
+        "type": "mongodb3 in",
+        "z": "757b79837df4b9c8",
+        "service": "_ext_",
+        "configNode": "b266ae06a7b18a46",
+        "name": "mongodb",
+        "collection": "myCollection",
+        "operation": "aggregate.toArray",
+        "x": 700,
+        "y": 60,
+        "wires": [
+            [
+                "fdbc7f67a1f1c976"
+            ]
+        ],
+        "info": "FindOne no mongoDB"
+    },
+    {
+        "id": "238f2f65917c5695",
+        "type": "mqtt in",
+        "z": "757b79837df4b9c8",
+        "name": "",
+        "topic": "testeprojeto",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "59f83fe78323cb82",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 150,
+        "y": 440,
+        "wires": [
+            [
+                "135d41a7edacd52e",
+                "94402042a441b7da"
+            ]
+        ]
+    },
+    {
+        "id": "92d5598b3d4a70fa",
+        "type": "mqtt out",
+        "z": "757b79837df4b9c8",
+        "name": "",
+        "topic": "testeprojeto",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "59f83fe78323cb82",
+        "x": 390,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "bc64499f1dbf6726",
+        "type": "mongodb3 in",
+        "z": "757b79837df4b9c8",
+        "service": "_ext_",
+        "configNode": "b266ae06a7b18a46",
+        "name": "mongodb",
+        "collection": "myCollection",
+        "operation": "insertOne",
+        "x": 680,
+        "y": 440,
+        "wires": [
+            []
+        ],
+        "info": "Faz o insert no mongoDB"
+    },
+    {
+        "id": "135d41a7edacd52e",
+        "type": "function",
+        "z": "757b79837df4b9c8",
+        "name": "Salva dado do MQTT no MongoDB",
+        "func": "// Obter o timestamp atual em UTC\nvar currentDateTime = new Date();\n\n// Criar um objeto Date representando o timestamp com o fuso horário de Brasília (GMT-3)\nvar brazilTime = new Date(currentDateTime.getTime() - (currentDateTime.getTimezoneOffset() * 60000));\n\n// Obter o JSON recebido da mensagem MQTT\nvar jsonFromMQTT = msg.payload;\n\n// Adicionar o timestamp ao JSON recebido\njsonFromMQTT.timestamp = brazilTime;\njsonFromMQTT.potencia = msg.payload.corrente*msg.payload.tensao\n\n// Atribuir o JSON modificado ao payload\nmsg.payload = jsonFromMQTT;\n\n// Passar a mensagem para o próximo nó no fluxo\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 440,
+        "wires": [
+            [
+                "bc64499f1dbf6726"
+            ]
+        ],
+        "info": "Incorporar timestamp no JSON"
+    },
+    {
+        "id": "7753a6ec186407ca",
+        "type": "function",
+        "z": "757b79837df4b9c8",
+        "name": "Construir Consulta",
+        "func": "// Recebe a data selecionada do payload\nvar selectedDate = new Date(msg.payload);\n\n// Define a data de início e de término do dia selecionado\nvar startDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 0, 0, 0); // Início do dia\nvar endDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59); // Término do dia\n\n\n// Define a agregação para agrupar os dados por hora\nvar aggregation = [\n  {\n   $match: {\n      timestamp: { $gte: startDate , $lte: endDate } // Converta as strings de data em objetos Date BSON\n    }\n  },\n  {\n    $project: {\n      hour: { $hour: \"$timestamp\" }, // Extrair a hora do timestamp\n      corrente: 1,\n      tensao: 1,\n      potencia: 1\n    }\n  },\n  {\n    $group: {\n      _id: \"$hour\", // Agrupar por hora\n      totalPotencia: {$sum: \"$potencia\"} // Somar os valores de tensao para cada hora\n    }\n  },\n  {\n    $sort: { _id: 1 } // Ordenar os resultados por hora\n  }\n];\n\n// Configure a mensagem para o nó mongodb2\nmsg.collection = \"sua_colecao\"; // Nome da coleção no MongoDB\nmsg.operation = \"aggregate\";\nmsg.payload = aggregation;\n\n// Envie a mensagem para o nó mongodb2\nreturn msg;\n\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 60,
+        "wires": [
+            [
+                "072de195acd7b0fa"
+            ]
+        ]
+    },
+    {
+        "id": "4166161a49e5baec",
+        "type": "ui_date_picker",
+        "z": "757b79837df4b9c8",
+        "name": "",
+        "label": "Data",
+        "group": "cfbf6e14cda69aba",
+        "order": 1,
+        "width": "4",
+        "height": 1,
+        "passthru": true,
+        "topic": "date_start",
+        "topicType": "msg",
+        "className": "",
+        "x": 70,
+        "y": 60,
+        "wires": [
+            [
+                "3617167d62016b39",
+                "5fcac34173914787",
+                "b82e415057046b2d"
+            ]
+        ]
+    },
+    {
+        "id": "3617167d62016b39",
+        "type": "function",
+        "z": "757b79837df4b9c8",
+        "name": "Tratamento de data",
+        "func": "\n\n// Acesse a data selecionada do payload\nvar selectedDate = new Date(msg.payload);\n\n// Faça algo com a data selecionada, por exemplo, converta-a para uma string\nvar dateString = selectedDate.toISOString();\n\n// Crie um novo objeto msg com a data processada\nvar newMsg = {\n        payload: dateString // Define a data processada como payload\n };\n\n// Envie o novo objeto msg para o próximo nó no fluxo\nreturn newMsg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 290,
+        "y": 60,
+        "wires": [
+            [
+                "7753a6ec186407ca"
+            ]
+        ]
+    },
+    {
+        "id": "6fe1f490babdef83",
+        "type": "ui_chart",
+        "z": "757b79837df4b9c8",
+        "name": "",
+        "group": "caebd59bafd0b4b9",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "label": "Consumo em kWh",
+        "chartType": "bar",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#dd2727",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "#linechart",
+        "x": 1090,
+        "y": 60,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fdbc7f67a1f1c976",
+        "type": "function",
+        "z": "757b79837df4b9c8",
+        "name": "Transforma array",
+        "func": "// Verificar se msg.payload é um objeto\nif (typeof msg.payload === 'object' && msg.payload !== null) {\n    // Inicializar arrays para coordenadas x e y\n    var xData = [];\n    var yData = [];\n\n    // Converter o objeto em um array de objetos\n    var dataArray = Object.values(msg.payload);\n\n    // Ordenar o array de objetos pelo _id em ordem crescente\n    dataArray.sort((a, b) => a._id - b._id);\n\n    // Iterar sobre cada objeto no array ordenado\n    for (var i = 0; i < dataArray.length; i++) {\n        var item = dataArray[i];\n        // Verificar se o item é um objeto com as propriedades _id e totalPotencia\n        if (typeof item === 'object' && item !== null && item.hasOwnProperty('_id') && item.hasOwnProperty('totalPotencia')) {\n            xData.push(item._id); // Adicionar _id ao array xData\n            yData.push(item.totalPotencia/1000); // Adicionar totalPotencia ao array yData\n        }\n    }\n\n    // Formatar os dados no formato esperado pelo line chart\n    var chartData = [\n        {\n            series: [\"totalPotencia\"], // Série para o eixo y\n            data: [yData], // Dados para o eixo y\n            labels: xData // Rótulos para o eixo x\n        }\n    ];\n\n    // Enviar os dados formatados para o próximo nó no fluxo\n    msg.payload = chartData;\n    return msg;\n} else {\n    // Caso contrário, os dados não estão no formato esperado, trate o erro ou ajuste conforme necessário\n    node.error(\"Os dados não estão no formato esperado (objeto).\");\n    return null; // Ou outra ação apropriada\n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 870,
+        "y": 60,
+        "wires": [
+            [
+                "6fe1f490babdef83"
+            ]
+        ]
+    },
+    {
+        "id": "8d932ba303f29283",
+        "type": "ui_chart",
+        "z": "757b79837df4b9c8",
+        "name": "",
+        "group": "9a4c5c39c7c6a8f9",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "label": "Consumo em tempo real (kW)",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "step",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "",
+        "removeOlder": "30",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "1",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 1130,
+        "y": 120,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "58386212185298e4",
+        "type": "mongodb3 in",
+        "z": "757b79837df4b9c8",
+        "service": "_ext_",
+        "configNode": "b266ae06a7b18a46",
+        "name": "mongodb",
+        "collection": "myCollection",
+        "operation": "aggregate.toArray",
+        "x": 700,
+        "y": 120,
+        "wires": [
+            [
+                "d99ade5927693326"
+            ]
+        ],
+        "info": "FindOne no mongoDB"
+    },
+    {
+        "id": "742ebf8de5ac2409",
+        "type": "function",
+        "z": "757b79837df4b9c8",
+        "name": "Construir Consulta",
+        "func": "// Recebe a data selecionada do payload\nvar selectedDate = new Date(msg.payload);\n\n// Define a data de início e de término do dia selecionado\nvar startDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 0, 0, 0); // Início do dia\nvar endDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59); // Término do dia\n\n\n\n// Define a agregação para agrupar os dados por segundo\nvar aggregation = [\n  {\n    $match: {\n      timestamp: { $gte: startDate, $lte: endDate } // Filtra os documentos dentro do dia selecionado\n    }\n  },\n  {\n    $project: {\n      year: { $year: \"$timestamp\" }, // Extrai o ano do timestamp\n      month: { $month: \"$timestamp\" }, // Extrai o mês do timestamp\n      day: { $dayOfMonth: \"$timestamp\" }, // Extrai o dia do mês do timestamp\n      hour: { $hour: \"$timestamp\" }, // Extrai a hora do timestamp\n      minute: { $minute: \"$timestamp\" }, // Extrai o minuto do timestamp\n      second: { $second: \"$timestamp\" }, // Extrai o segundo do timestamp\n      corrente: 1,\n      tensao: 1,\n      potencia: 1\n    }\n  },\n  {\n    $group: {\n      _id: { year: \"$year\", month: \"$month\", day: \"$day\", hour: \"$hour\", minute: \"$minute\", second: \"$second\" }, // Agrupa por segundo\n      totalPotencia: { $sum: \"$potencia\" } // Calcula a soma dos valores de potencia para cada segundo\n    }\n  },\n  {\n    $sort: { \"_id.year\": 1, \"_id.month\": 1, \"_id.day\": 1, \"_id.hour\": 1, \"_id.minute\": 1, \"_id.second\": 1 } // Ordena os resultados por timestamp\n  },\n  {\n    $project: {\n      _id: { $dateFromParts: { year: \"$_id.year\", month: \"$_id.month\", day: \"$_id.day\", hour: \"$_id.hour\", minute: \"$_id.minute\", second: \"$_id.second\" } }, // Reconstrói o timestamp\n      totalPotencia: 1\n    }\n  }\n];\n// Configure a mensagem para o nó mongodb2\nmsg.collection = \"sua_colecao\"; // Nome da coleção no MongoDB\nmsg.operation = \"aggregate\";\nmsg.payload = aggregation;\n\n// Envie a mensagem para o nó mongodb2\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 120,
+        "wires": [
+            [
+                "58386212185298e4"
+            ]
+        ]
+    },
+    {
+        "id": "5fcac34173914787",
+        "type": "function",
+        "z": "757b79837df4b9c8",
+        "name": "Tratamento de data",
+        "func": "\n// Acesse a data selecionada do payload\nvar selectedDate = new Date(msg.payload);\n\n// Faça algo com a data selecionada, por exemplo, converta-a para uma string\nvar dateString = selectedDate.toISOString();\n\n// Crie um novo objeto msg com a data processada\nvar newMsg = {\n    payload: dateString // Define a data processada como payload\n};\n\n// Envie o novo objeto msg para o próximo nó no fluxo\nreturn newMsg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 290,
+        "y": 120,
+        "wires": [
+            [
+                "742ebf8de5ac2409"
+            ]
+        ]
+    },
+    {
+        "id": "d99ade5927693326",
+        "type": "function",
+        "z": "757b79837df4b9c8",
+        "name": "Transforma array",
+        "func": "// Verificar se msg.payload é um objeto\nif (typeof msg.payload === 'object' && msg.payload !== null) {\n    // Inicializar arrays para coordenadas x e y\n    var xData = [];\n    var yData = [];\n\n    // Converter o objeto em um array de objetos\n    var dataArray = Object.values(msg.payload);\n\n    // Ordenar o array de objetos pelo _id em ordem crescente\n    dataArray.sort((a, b) => a._id - b._id);\n\n    // Iterar sobre cada objeto no array ordenado\n    for (var i = 0; i < dataArray.length; i++) {\n        var item = dataArray[i];\n        // Verificar se o item é um objeto com as propriedades _id e totalPotencia\n        if (typeof item === 'object' && item !== null && item.hasOwnProperty('_id') && item.hasOwnProperty('totalPotencia')) {\n             var year = item._id.year;\n            var month = item._id.month;\n            var day = item._id.day;\n            var hour = item._id.hour;\n            var minute = item._id.minute;\n            var second = item._id.second;\n    \n            // Formatar a data e hora como uma string\n            var dateTimeString = year + \"-\" + month + \"-\" + day + \" \" + hour + \":\" + minute + \":\" + second;\n\n            // Adicionar a string formatada ao array xData\n            xData.push(dateTimeString);\n            yData.push(item.totalPotencia/1000); // Adicionar totalPotencia ao array yData\n        }\n    }\n\n    // Formatar os dados no formato esperado pelo line chart\n    var chartData = [\n        {\n            series: [\"totalPotencia\"], // Série para o eixo y\n            data: [yData], // Dados para o eixo y\n            labels: xData // Rótulos para o eixo x\n        }\n    ];\n\n    // Enviar os dados formatados para o próximo nó no fluxo\n    msg.payload = chartData;\n    return msg;\n} else {\n    // Caso contrário, os dados não estão no formato esperado, trate o erro ou ajuste conforme necessário\n    node.error(\"Os dados não estão no formato esperado (objeto).\");\n    return null; // Ou outra ação apropriada\n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 870,
+        "y": 120,
+        "wires": [
+            [
+                "8d932ba303f29283"
+            ]
+        ]
+    },
+    {
+        "id": "014af266c696495f",
+        "type": "inject",
+        "z": "757b79837df4b9c8",
+        "name": "Atualizador",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "dateValue",
+        "payloadType": "global",
+        "x": 90,
+        "y": 180,
+        "wires": [
+            [
+                "6ffb40782fa9205d"
+            ]
+        ]
+    },
+    {
+        "id": "c48e0bf3d00efa73",
+        "type": "debug",
+        "z": "757b79837df4b9c8",
+        "name": "debug 1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 540,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "b82e415057046b2d",
+        "type": "function",
+        "z": "757b79837df4b9c8",
+        "name": "Salva data como variável global",
+        "func": "// Nó function para armazenar a data em uma variável global\nif (msg.payload) {\n    var dateValue = msg.payload; // Valor do date_picker\n    global.set(\"dataSelecionada\", dateValue); // Armazena a data em uma variável global chamada \"dataSelecionada\"\n} else {\n    console.error(\"Mensagem não contém um valor de date_picker.\");\n}\n\nreturn msg; // Retorna a mensagem para o próximo nó no fluxo\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 330,
+        "y": 180,
+        "wires": [
+            [
+                "c48e0bf3d00efa73"
+            ]
+        ]
+    },
+    {
+        "id": "6ffb40782fa9205d",
+        "type": "function",
+        "z": "757b79837df4b9c8",
+        "name": "Recupera data selecionada",
+        "func": "var dataSelecionada = global.get(\"dataSelecionada\"); // Recupera a data da variável global\n\nif (dataSelecionada) {\n    msg.payload = dataSelecionada; // Define o valor da data como o payload da mensagem\n    return msg; // Retorna a mensagem com a data para o próximo nó no fluxo\n} else {\n    console.error(\"Nenhuma data selecionada encontrada na variável global.\");\n    return null; // Retorna null se não houver data disponível\n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 180,
+        "y": 260,
+        "wires": [
+            [
+                "5fcac34173914787",
+                "3617167d62016b39"
+            ]
+        ]
+    },
+    {
+        "id": "0272b3fe11491560",
+        "type": "mqtt in",
+        "z": "757b79837df4b9c8",
+        "name": "",
+        "topic": "testeprojeto2",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "59f83fe78323cb82",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 170,
+        "y": 640,
+        "wires": [
+            [
+                "78107d9eb24eb719",
+                "14f9724973456a05",
+                "db50c109a27af29e"
+            ]
+        ]
+    },
+    {
+        "id": "847648116145b923",
+        "type": "mqtt out",
+        "z": "757b79837df4b9c8",
+        "name": "",
+        "topic": "ligardesligarprojeto2",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "59f83fe78323cb82",
+        "x": 360,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "6054fbee287d7787",
+        "type": "ui_button",
+        "z": "757b79837df4b9c8",
+        "name": "",
+        "group": "cfbf6e14cda69aba",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Desligar",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "1",
+        "payloadType": "num",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 160,
+        "y": 760,
+        "wires": [
+            [
+                "847648116145b923"
+            ]
+        ]
+    },
+    {
+        "id": "621567fff895934f",
+        "type": "ui_button",
+        "z": "757b79837df4b9c8",
+        "name": "",
+        "group": "cfbf6e14cda69aba",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Ligar",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "0",
+        "payloadType": "num",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 170,
+        "y": 820,
+        "wires": [
+            [
+                "847648116145b923"
+            ]
+        ]
+    },
+    {
+        "id": "78107d9eb24eb719",
+        "type": "function",
+        "z": "757b79837df4b9c8",
+        "name": "function 1",
+        "func": "var status = false; // Inicialmente, o dispositivo está desligado\n\n\nif (msg.payload.value === 1) {\n   // Lógica para ligar o dispositivo\n    status = true;\n} else {\n   // Lógica para desligar o dispositivo\n   status = false;\n}\n\n\n// Se o status é verdadeiro, o dispositivo está ligado; caso contrário, está desligado\nif (status) {\n    // Lógica para o dispositivo ligado\n    // Por exemplo, publicar em um tópico MQTT\n    msg.payload = \"Sim\";\n    return msg;\n} else {\n    // Lógica para o dispositivo desligado\n    // Por exemplo, publicar em um tópico MQTT\n    msg.payload = \"Não\";\n    return msg;\n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 700,
+        "wires": [
+            [
+                "e6224e6c07103438"
+            ]
+        ]
+    },
+    {
+        "id": "e6224e6c07103438",
+        "type": "ui_text",
+        "z": "757b79837df4b9c8",
+        "group": "cfbf6e14cda69aba",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Espaço ocupado?",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "className": "",
+        "style": true,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 730,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "51873f2954cf648b",
+        "type": "mongodb3 in",
+        "z": "757b79837df4b9c8",
+        "service": "_ext_",
+        "configNode": "b266ae06a7b18a46",
+        "name": "mongodb",
+        "collection": "ocupacao",
+        "operation": "insertOne",
+        "x": 920,
+        "y": 640,
+        "wires": [
+            []
+        ],
+        "info": "Faz o insert no mongoDB"
+    },
+    {
+        "id": "14f9724973456a05",
+        "type": "function",
+        "z": "757b79837df4b9c8",
+        "name": "Salva dado do MQTT no MongoDB",
+        "func": "// Obter o timestamp atual em UTC\nvar currentDateTime = new Date();\n\n// Criar um objeto Date representando o timestamp com o fuso horário de Brasília (GMT-3)\nvar brazilTime = new Date(currentDateTime.getTime() - (currentDateTime.getTimezoneOffset() * 60000));\n\n// Obter o JSON recebido da mensagem MQTT\nvar jsonFromMQTT = msg.payload;\n\n// Adicionar o timestamp ao JSON recebido\njsonFromMQTT.timestamp = brazilTime;\n\n// Atribuir o JSON modificado ao payload\nmsg.payload = jsonFromMQTT;\n\n// Passar a mensagem para o próximo nó no fluxo\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 640,
+        "wires": [
+            [
+                "51873f2954cf648b"
+            ]
+        ],
+        "info": "Incorporar timestamp no JSON"
+    },
+    {
+        "id": "7bb0a7aa6ed7045d",
+        "type": "mongodb3 in",
+        "z": "757b79837df4b9c8",
+        "service": "_ext_",
+        "configNode": "b266ae06a7b18a46",
+        "name": "mongodb",
+        "collection": "ocupacao",
+        "operation": "aggregate.toArray",
+        "x": 700,
+        "y": 280,
+        "wires": [
+            [
+                "508c97633f444982"
+            ]
+        ],
+        "info": "FindOne no mongoDB"
+    },
+    {
+        "id": "508c97633f444982",
+        "type": "function",
+        "z": "757b79837df4b9c8",
+        "name": "Transforma array",
+        "func": "// Verificar se msg.payload é um objeto\nif (typeof msg.payload === 'object' && msg.payload !== null) {\n    // Inicializar arrays para coordenadas x e y\n    var xData = [];\n    var yData = [];\n\n    // Converter o objeto em um array de objetos\n    var dataArray = Object.values(msg.payload);\n\n    // Ordenar o array de objetos pelo _id em ordem crescente\n    dataArray.sort((a, b) => a._id - b._id);\n\n    // Iterar sobre cada objeto no array ordenado\n    for (var i = 0; i < dataArray.length; i++) {\n        var item = dataArray[i];\n        // Verificar se o item é um objeto com as propriedades _id e totalPotencia\n        if (typeof item === 'object' && item !== null && item.hasOwnProperty('_id') && item.hasOwnProperty('totalValue')) {\n             var year = item._id.year;\n            var month = item._id.month;\n            var day = item._id.day;\n            var hour = item._id.hour;\n            var minute = item._id.minute;\n            //var second = item._id.second;\n    \n            // Formatar a data e hora como uma string\n            var dateTimeString = year + \"-\" + month + \"-\" + day + \" \" + hour + \":\" + minute;//+ \":\" + second;\n\n            // Adicionar a string formatada ao array xData\n            xData.push(dateTimeString);\n            yData.push(item.totalValue !== 0 ? 1 : 0);; // Adicionar totalPotencia ao array yData\n        }\n    }\n\n    // Formatar os dados no formato esperado pelo line chart\n    var chartData = [\n        {\n            series: [\"totalValue\"], // Série para o eixo y\n            data: [yData], // Dados para o eixo y\n            labels: xData // Rótulos para o eixo x\n        }\n    ];\n\n    // Enviar os dados formatados para o próximo nó no fluxo\n    msg.payload = chartData;\n    return msg;\n} else {\n    // Caso contrário, os dados não estão no formato esperado, trate o erro ou ajuste conforme necessário\n    node.error(\"Os dados não estão no formato esperado (objeto).\");\n    return null; // Ou outra ação apropriada\n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 870,
+        "y": 280,
+        "wires": [
+            [
+                "0d62838e346cc784"
+            ]
+        ]
+    },
+    {
+        "id": "0d62838e346cc784",
+        "type": "ui_chart",
+        "z": "757b79837df4b9c8",
+        "name": "",
+        "group": "cfbf6e14cda69aba",
+        "order": 5,
+        "width": "4",
+        "height": "5",
+        "label": "Presença em tempo real",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "auto",
+        "interpolate": "step",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "",
+        "removeOlder": "30",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "1",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 1090,
+        "y": 280,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "182926db4cc7b75d",
+        "type": "function",
+        "z": "757b79837df4b9c8",
+        "name": "Tratamento de data",
+        "func": "\n// Acesse a data selecionada do payload\nvar selectedDate = new Date(msg.payload);\n\n// Faça algo com a data selecionada, por exemplo, converta-a para uma string\nvar dateString = selectedDate.toISOString();\n\n// Crie um novo objeto msg com a data processada\nvar newMsg = {\n    payload: dateString // Define a data processada como payload\n};\n\n// Envie o novo objeto msg para o próximo nó no fluxo\nreturn newMsg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 350,
+        "y": 320,
+        "wires": [
+            [
+                "dbe1401c4b8d892e"
+            ]
+        ]
+    },
+    {
+        "id": "47e3b576b7a3bf85",
+        "type": "inject",
+        "z": "757b79837df4b9c8",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 120,
+        "y": 320,
+        "wires": [
+            [
+                "182926db4cc7b75d"
+            ]
+        ]
+    },
+    {
+        "id": "dbe1401c4b8d892e",
+        "type": "function",
+        "z": "757b79837df4b9c8",
+        "name": "function 3",
+        "func": "// Recebe a data selecionada do payload\nvar selectedDate = new Date(msg.payload);\n\n// Calcula o deslocamento de fuso horário para UTC -3\nvar offset = selectedDate.getTimezoneOffset() / 60;\nvar startDate = new Date(selectedDate.getTime() - (5 * 60 * 1000) - (offset * 60 * 60 * 1000)); // Calcula a data de início para 5 minutos antes da data selecionada com o deslocamento de fuso horário\nvar endDate = new Date(selectedDate.getTime() - (offset * 60 * 60 * 1000)); // Adiciona o deslocamento de fuso horário à data selecionada para a data de término\n\n// Define a agregação para agrupar os dados por minuto e calcular a soma dos valores de value\nvar aggregation = [\n  {\n    $match: {\n      timestamp: { $gte: startDate, $lte: endDate } // Filtra os documentos dentro dos últimos 5 minutos\n    }\n  },\n  {\n    $group: {\n      _id: {\n        year: { $year: \"$timestamp\" },\n        month: { $month: \"$timestamp\" },\n        day: { $dayOfMonth: \"$timestamp\" },\n        hour: { $hour: \"$timestamp\" },\n        minute: { $minute: \"$timestamp\" }\n      },\n      totalValue: {\n        $sum: {\n          $cond: [\n            { $eq: [\"$value\", 0] }, // Se o valor for igual a zero\n            0, // Atribui zero\n            1 // Caso contrário, atribui 1\n          ]\n        }\n      }\n    }\n    \n  },\n  {\n    $sort: { \"_id.year\": 1, \"_id.month\": 1, \"_id.day\": 1, \"_id.hour\": 1, \"_id.minute\": 1} // Ordena os resultados por timestamp\n  },\n  {\n    $project: {\n      _id: 0, // Exclui o campo _id\n      minute: {\n        $dateFromParts: {\n          year: \"$_id.year\",\n          month: \"$_id.month\",\n          day: \"$_id.day\",\n          hour: \"$_id.hour\",\n          minute: \"$_id.minute\"\n        }\n      },\n      totalValue: 1 // Mantém o campo totalValue\n    }\n  }\n];\n\n// Configure a mensagem para o nó mongodb2\nmsg.collection = \"sua_colecao\"; // Nome da coleção no MongoDB\nmsg.operation = \"aggregate\";\nmsg.payload = aggregation;\n\n// Envie a mensagem para o nó mongodb2\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 380,
+        "wires": [
+            [
+                "7bb0a7aa6ed7045d"
+            ]
+        ]
+    },
+    {
+        "id": "94402042a441b7da",
+        "type": "debug",
+        "z": "757b79837df4b9c8",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 620,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "db50c109a27af29e",
+        "type": "debug",
+        "z": "757b79837df4b9c8",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 900,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "b266ae06a7b18a46",
+        "type": "mongodb3",
+        "uri": "mongodb+srv://admin:admin@cluster.cek48cg.mongodb.net/?retryWrites=true&w=majority&appName=Cluster",
+        "name": "",
+        "options": "",
+        "parallelism": "-1"
+    },
+    {
+        "id": "59f83fe78323cb82",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "https://test.mosquitto.org/",
+        "port": "1883",
+        "clientid": "\\testeprojeto",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "cfbf6e14cda69aba",
+        "type": "ui_group",
+        "name": "Menu",
+        "tab": "441d47dc8cd8c312",
+        "order": 1,
+        "disp": true,
+        "width": "4",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "caebd59bafd0b4b9",
+        "type": "ui_group",
+        "name": "",
+        "tab": "441d47dc8cd8c312",
+        "order": 2,
+        "disp": true,
+        "width": "10",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "9a4c5c39c7c6a8f9",
+        "type": "ui_group",
+        "name": "",
+        "tab": "441d47dc8cd8c312",
+        "order": 3,
+        "disp": true,
+        "width": "10",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "441d47dc8cd8c312",
+        "type": "ui_tab",
+        "name": "Home",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]
