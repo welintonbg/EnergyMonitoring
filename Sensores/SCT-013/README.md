@@ -6,7 +6,7 @@
 O sensor SCT013 é um sensor não invasivo utilizado para ler corrente que passa por um fio.
 
 
-![SensorLD2410B](./SCT013.png)
+![SensorSCT-013](./SCT-013.png)
 
 ## Especificações e características:
 
