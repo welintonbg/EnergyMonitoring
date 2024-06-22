@@ -33,4 +33,5 @@ Para executar o projeto localmente, siga estas etapas:
 
 3. **NODE-RED**
    - Instale localmente o NODE-RED a partir do [site oficial](https://nodered.org/docs/getting-started/local).
-   - 
+   - Exporte o JSON [disponível](https://github.com/welintonbg/EnergyMonitoring/blob/main/NodeRED/flows.json) para dentro do NODE-RED.
+   - Configure o [mongoDB](https://www.mongodb.com/) na nuvem conforme documentação. 
