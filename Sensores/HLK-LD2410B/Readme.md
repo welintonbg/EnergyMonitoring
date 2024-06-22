@@ -1,11 +1,10 @@
 
-# Como usar com ESP32 – Sensor de Pressão e Temperatura BMP280
+# Como usar com ESP32 – Sensor de Presença humana
 
 ## Descrição:
 
-O sensor BMP280 é colocado dentro do biodigestor para monitorar a pressão atmosférica e a temperatura interna. Conectado ao ESP32, fornece informações sobre as condições dentro do biodigestor, permitindo intervenções preventivas se necessário.
+O sensor LD2410B é utilizado dentro de um ambiente onde se quer monitorar a presença humana em movimento e em repouso.
 
-OBS: este sensor possui interface de comunicação I2C e SPI. Para esta prática, foi utilizado comunicação I2C.
 
 ![SensorBMP280](./BMP280.jpg)
 
