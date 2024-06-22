@@ -10,14 +10,7 @@ O sensor LD2410B é utilizado dentro de um ambiente onde se quer monitorar a pre
 
 ## Especificações e características:
 
- - Controlador: BMP280;
- - Tensão de operação: 3,3VDC;
- - Corrente de operação: 2,7µA;
- - Faixa de Pressão: 300 a 1100hPa;
- - Precisão da pressão: ±0,12hPa;
- - Temperatura: -40º a 85º celsius;
- - Precisão da temperatura: 1ºC;
- - Interface de comunicação: I2C / SPI.
+ - Tensão de operação: 5VDC;
 
 ## Datasheet:
 
