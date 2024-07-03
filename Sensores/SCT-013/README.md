@@ -19,20 +19,54 @@ O sensor SCT013 é um sensor não invasivo utilizado para ler corrente que passa
 
 Projetos com ESP32 ou outras plataformas microcontroladas em que seja necessário fazer a medição da corrente que alimenta determinada carga
 
-### Pinagem:
+### Circuito:
 
-| Pino          | Saída      | Pino no ESP32          |
-| ------------- | ---------- | ---------------------- |
-| ${{\color{Red}\Huge{\textsf{  - \}}}}\$      | 1          |- |
-| ${{\color{Gray}\Huge{\textsf{  - \}}}}\$      | 2         |-   |
-| ${{\color{Lime}\Huge{\textsf{  - \}}}}\$       | 3         | -      |
-| ${{\color{Blue}\Huge{\textsf{  - \}}}}\$        | 4         | -       |
+![SensorSCT-013](./sCT013circuit.webp)
 
 
-## Bibliotecas:
+Onde: 
+R = 330
+RA = RB = 10K
+
+### Comunicação com o ESP32
+
+![Sensor ZMPT101B](../../esp32.webp)
+
+
+### Bibliotecas:
 
 ```bash 
-  #include <>
+#include "EmonLib.h"
+#include <stdio.h>
+
+EnergyMonitor SCT013;
+
+int pinSCT = 39;   //Pino analógico conectado ao SCT-013
+
+float potencia;
+char str[20];
+
+void setup()
+{
+
+  Serial.begin(115200);
+  SCT013.current(pinSCT, 7.0606);
+}
+
+void loop()
+{
+    double Irms = SCT013.calcIrms(1480);   // Calcula o valor da Corrente
+   
+    Serial.print("Corrente = ");
+    Serial.print(Irms);
+    Serial.println("A");
+
+    Serial.print(".");
+    delay(500);
+    Serial.println(".");
+    delay(500);
+
+}
 ```
 
 
