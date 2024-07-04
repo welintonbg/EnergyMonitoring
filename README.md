@@ -25,6 +25,8 @@ Para o esp 32 foram utilizadas as seguintes bibliotecas:
 
 Para executar o projeto localmente, siga estas etapas:
 
+Dentro da pasta ESP32 está os códigos para os dois ESP utilizados e dentro da pasta "NodeRED" está o fluxo utilizado no Node RED.
+
 1. **Pré-requisitos**:
    - Instale a última versão da Arduino IDE a partir do [site oficial](https://www.arduino.cc/en/software).
    - Configure a Arduino IDE para suportar o ESP32 seguindo as instruções disponíveis na [documentação do ESP32](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html).
