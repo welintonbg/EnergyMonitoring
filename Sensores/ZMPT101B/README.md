@@ -6,7 +6,7 @@
 O sensor ZMPT101b é um sensor invasivo utilizado para ler a tensão.
 
 
-![Sensor ZMPT101B](./ZMPT101B.jpg)
+![Sensor ZMPT101B](./ZMPT101B.png)
 
 ## Especificações e características:
 
