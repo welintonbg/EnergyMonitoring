@@ -32,7 +32,8 @@ Projetos com ESP32 ou outras plataformas microcontroladas em que seja necessári
 ## Bibliotecas:
 
 ```bash 
-  #include <>
+#include "EmonLib.h"
+#include <stdio.h>
 ```
 
 
