@@ -13,6 +13,9 @@ O projeto apresentado aqui tem como objetivo verificar o consumo de energia em d
 Para o esp 32 foram utilizadas as seguintes bibliotecas:
 ```
   #include <ld2410.h>
+  #include <WiFi.h>
+  #include <PubSubClient.h>
+  #include <ArduinoJson.h>
 ```
 
 
