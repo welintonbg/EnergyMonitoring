@@ -1,6 +1,15 @@
 # Sistema de monitoramento de consumo de energia com ESP32 e Sensores:
 Projeto de sistemas ubíquos para monitoramento de consumo de energia dentro de um prédio público.
 
+## Resumo:
+- O projeto se resume em dois protótipos que interagem com um servidor MQTT
+- Dois diretórios:
+   - EnergyMonitoring: Configurações do setup de monitoramento de energia
+   - PersonMonitoring: Configuração do setup para monitoramento de presença humana
+- Dois códigos:
+   - EnergyMonitoring/EnergyMonitoring.ino: Monitoramento de energia e comunicação com o servidor MQTT
+   - PersonMonitoring/PersonMonitoring.ino: Monitoramento de presença humana e comunicação com o servidor MQTT
+
 ## Descrição:
 
 O projeto apresentado aqui tem como objetivo verificar o consumo de energia em determinado local e verificar a presença de pessoas no mesmo para identificar possíveis desperdícios. Para isso, foram utilizados os sensores de corrente, tensão e presença humana. Os dados foram transmitidos do ESP32 para a nuvem via MQTT e dentro do fluxo do Node-RED, salvos no banco mongoDB e visualizados em tela via dashboard
@@ -33,7 +42,7 @@ Dentro da pasta ESP32 está os códigos para os dois ESP utilizados e dentro da 
    - Instale todas as bibliotecas necessárias mencionadas no arquivo [bibliotecas](./bibliotecas.txt).
 
 2. **Execução da Aplicação**:
-   - **Carregar o Código no ESP32**:
+   - **Carregar o Código EnergyMonitoring no ESP32**:
      1. Conecte o ESP32 ao seu computador.
      2. Abra o Arduino IDE.
      3. Carregue o código no ESP32.
