@@ -1,6 +1,8 @@
 # Sistema de monitoramento de consumo de energia com ESP32 e Sensores:
 Projeto de sistemas ubíquos para monitoramento de consumo de energia dentro de um prédio público.
 
+Autores: Ricardo Battaglin e Welinton Barcelos
+
 ## Resumo:
 - O projeto se resume em dois protótipos que interagem com um servidor MQTT
 - Dois diretórios:
