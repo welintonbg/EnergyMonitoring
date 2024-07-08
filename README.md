@@ -53,3 +53,13 @@ Dentro da pasta ESP32 está os códigos para os dois ESP utilizados e dentro da 
    - Instale localmente o NODE-RED a partir do [site oficial](https://nodered.org/docs/getting-started/local).
    - Exporte o JSON [disponível](https://github.com/welintonbg/EnergyMonitoring/blob/main/NodeRED/flows.json) para dentro do NODE-RED.
    - Configure o [mongoDB](https://www.mongodb.com/) na nuvem conforme documentação. 
+
+
+## Futuros trabalhos:
+
+Com base no trabalho atual, pode-se pensar em possíveis validações e melhorias:
+
+1. Validação dos dados de medição de tensão, corrente e presença humana.
+2. Utilização de bluetooth para a conexão com o sensor de presença humana e união de todos os códigos em um ESP32 (exemplos na internet mostram que é possível).
+3. Aplicar a utilização de atuadores para desligar equipamentos a distância.
+4. Melhoria no dashboard para receber dados de mais de um ESP32 para monitorar mais de um local.
