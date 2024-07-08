@@ -1,26 +1,27 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
-#include "EmonLib.h"
-#include <stdio.h>
-
-EnergyMonitor SCT013;
-EnergyMonitor ZMPT101B; // Cria uma instância de monitor de energia
-
-int pinSCT = 11;   //Pino analógico conectado ao SCT-013
-int pinZMPT = 10;   //Pino analógico conectado ao SCT-013
-
-float potencia;
-char str[20];
+#include <ld2410.h>
 
 const char* ssid = "ssid";
 const char* password = "senha";
 const char* mqtt_server = "test.mosquitto.org";
 const int mqtt_port = 1883;
-const char* mqtt_topic = "testeprojeto";
+const char* mqtt_topic = "testeprojeto2";
+const char* mqtt_topic2 = "ligardesligarprojeto2";
 
 WiFiClient MonitorEnergy;
 PubSubClient client(MonitorEnergy);
+ld2410 radar;
+
+#define RADAR_SERIAL Serial1
+#define RADAR_RX_PIN 16
+#define RADAR_TX_PIN 17
+   
+
+uint32_t lastReading = 0;
+bool radarConnected = false;
+uint32_t presenca;
 
 unsigned long previousMillis = 0;
 const long interval = 1000; // Intervalo de 5 segundos
@@ -63,7 +64,7 @@ void reconnect() {
     
     if (client.connect("MonitorEnergy")) {
       Serial.println("Conectado");
-      client.subscribe(mqtt_topic);
+      client.subscribe(mqtt_topic2);
       client.setKeepAlive(15);
     } else {
       Serial.print("Falha, rc=");
@@ -74,16 +75,71 @@ void reconnect() {
   }
 }
 
+uint32_t le_presenca()
+{
+  radar.read();
+  if (radar.isConnected()) //Report every 1000ms
+  {
+    if (radar.presenceDetected())
+    {  presenca = 1;
+    
+      if (radar.stationaryTargetDetected())
+      {
+        Serial.print(F("Stationary target: "));
+        Serial.print(radar.stationaryTargetDistance());
+        Serial.print(F("cm energy:"));
+        Serial.print(radar.stationaryTargetEnergy());
+        Serial.print(' ');
+      }
+      if (radar.movingTargetDetected())
+      {
+        Serial.print(F("Moving target: "));
+        Serial.print(radar.movingTargetDistance());
+        Serial.print(F("cm energy:"));
+        Serial.print(radar.movingTargetEnergy());
+      }
+      Serial.println();
+    }
+    else
+  {
+    presenca = 0;
+    Serial.println(F("No target"));
+  }
+  }
+  
+  return presenca;
+}
+
 
 void setup() {
-  Serial.begin(115200);
-  SCT013.current(pinSCT, 6.0606);
-  ZMPT101B.voltage(pinZMPT, 2, 0); // Configura a entrada do sensor de tensão no pino 35 (modifique conforme necessário), 234.26 é a calibração e 1.7 é o fator de fase
+  Serial.begin(115200); //Feedback over Serial Monitor
+  RADAR_SERIAL.begin(256000, SERIAL_8N1, RADAR_RX_PIN, RADAR_TX_PIN); //UART for monitoring the radar
   setup_wifi();
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
   pinMode(14, OUTPUT);
   digitalWrite(14, HIGH);
+  delay(500);
+  Serial.print(F("\nConnect LD2410 radar TX to GPIO:"));
+  Serial.println(RADAR_RX_PIN);
+  Serial.print(F("Connect LD2410 radar RX to GPIO:"));
+  Serial.println(RADAR_TX_PIN);
+  Serial.print(F("LD2410 radar sensor initialising: "));
+  if(radar.begin(RADAR_SERIAL))
+  {
+    Serial.println(F("OK"));
+    Serial.print(F("LD2410 firmware version: "));
+    Serial.print(radar.firmware_major_version);
+    Serial.print('.');
+    Serial.print(radar.firmware_minor_version);
+    Serial.print('.');
+    Serial.println(radar.firmware_bugfix_version, HEX);
+  }
+  else
+  {
+    Serial.println(F("not connected"));
+  }
+  
 }
 
 
@@ -95,16 +151,12 @@ void loop() {
   }
   client.loop();
   //Serial.println("Passei");
-  Serial.println(currentMillis - previousMillis);
-  double Irms = SCT013.calcIrms(1480);   // Calcula o valor da Corrente
-  double Vrms = ZMPT101B.Vrms; // Obtém a tensão RMS
-  ZMPT101B.calcVI(20,2000); // Calcula a tensão e corrente (20 ciclos de medição, intervalo de tempo de 2000ms)
-
+  //Serial.println(currentMillis - previousMillis);
 
   if (currentMillis - previousMillis >= interval) {
     StaticJsonDocument<200> doc;
-    doc["corrente"] = Irms;
-    doc["tensao"] = Vrms;
+    doc["sensor"] = "ESP32";
+    doc["value"] = le_presenca();
     String json;
     serializeJson(doc, json);
     
@@ -118,27 +170,5 @@ void loop() {
       Serial.println("Publiquei");
       }
     client.loop();
-
-    Serial.print("Tensão RMS: ");
-    Serial.print(Vrms);
-    Serial.println(" V");    
-    
-    potencia = Irms * Vrms;          // Calcula o valor da Potencia Instantanea    
-    Serial.print("Corrente = ");
-    Serial.print(Irms);
-    Serial.println("A");
-    
-    Serial.print("Potencia = ");
-    Serial.print(potencia);
-    Serial.println(" W");
-   
-    delay(500);
-    Serial.print(".");
-    delay(500);
-    Serial.print(".");
-    delay(500);
-    Serial.println(".");
-    delay(500);
-
   }
 }
