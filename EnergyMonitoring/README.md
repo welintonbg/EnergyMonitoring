@@ -197,4 +197,4 @@ Para executar o projeto localmente, siga estas etapas:
      1. Conecte o ESP32 ao seu computador.
      2. Abra o Arduino IDE.
      3. Carregue o código no ESP32.
-     4. Quando o código rodar, dentro do Serial aparecerá o código em funcionamento como no exemplo [presença](./consumo.png)
+     4. Quando o código rodar, dentro do Serial aparecerá o código em funcionamento como no exemplo [consumo](./consumo.jpeg)
