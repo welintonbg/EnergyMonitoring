@@ -3,7 +3,7 @@ Projeto de sistemas ubíquos para monitoramento de consumo de energia dentro de 
 
 ## Descrição:
 
-O projeto apresentado aqui tem como objetivo verificar o consumo de energia em determinado local e verificar a presença de pessoas no mesmo para identificar possíveis desperdícios. Para isso, foram utilizados os sensores de corrente, tensão e presença humana. Os dados foram transmitidos do ESP32 para a nuvem via MQTT e dentro do fluxo do Node-RED, salvos no banco mongoDB e visualizados em tela via dashboard
+Esse código utiliza o sensor de presença humana para monitorar se há alguém dentro de um determinado local.
 
 ## Especificações e características:
 
