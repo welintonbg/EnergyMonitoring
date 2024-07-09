@@ -9,7 +9,7 @@ Autores: Ricardo Battaglin e Welinton Barcelos
    - EnergyMonitoring: Configurações do setup de monitoramento de energia e seus sensores
    - PersonMonitoring: Configuração do setup para monitoramento de presença humana e seu sensor
    - NodeRED: Configuração do NodeRED e seus tutoriais
-- Dois códigos:
+- Três códigos:
    - EnergyMonitoring/EnergyMonitoring.ino: Monitoramento de energia e comunicação com o servidor MQTT
    - PersonMonitoring/PersonMonitoring.ino: Monitoramento de presença humana e comunicação com o servidor MQTT
    - NodeRED/flows.json: Código com todos os blocos utilizados para criar os fluxos do NodeRED.
