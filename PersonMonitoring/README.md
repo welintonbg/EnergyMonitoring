@@ -195,6 +195,18 @@ void loop() {
 }
 ```
 
+### Pinagem:
+
+| Pino          | Saída      | Pino no ESP32          |
+| ------------- | ---------- | ---------------------- |
+| ${{\color{Red}\Huge{\textsf{  VCC \}}}}\$      | 1          | 5V |
+| ${{\color{Gray}\Huge{\textsf{  GND \}}}}\$      | 2         | GND   |
+| ${{\color{Lime}\Huge{\textsf{  UART Rx \}}}}\$       | 3         | 16      |
+| ${{\color{Blue}\Huge{\textsf{  UART Tx \}}}}\$        | 4         | 17       |
+
+
+## Esquema:
+
 
 ## Instruções de execuções:
 
