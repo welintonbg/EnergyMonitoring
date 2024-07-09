@@ -5,12 +5,14 @@ Autores: Ricardo Battaglin e Welinton Barcelos
 
 ## Resumo:
 - O projeto se resume em dois protótipos que interagem com um servidor MQTT
-- Dois diretórios:
-   - EnergyMonitoring: Configurações do setup de monitoramento de energia
-   - PersonMonitoring: Configuração do setup para monitoramento de presença humana
+- Três diretórios:
+   - EnergyMonitoring: Configurações do setup de monitoramento de energia e seus sensores
+   - PersonMonitoring: Configuração do setup para monitoramento de presença humana e seu sensor
+   - NodeRED: Configuração do NodeRED e seus tutoriais
 - Dois códigos:
    - EnergyMonitoring/EnergyMonitoring.ino: Monitoramento de energia e comunicação com o servidor MQTT
    - PersonMonitoring/PersonMonitoring.ino: Monitoramento de presença humana e comunicação com o servidor MQTT
+   - NodeRED/flows.json: Código com todos os blocos utilizados para criar os fluxos do NodeRED.
 
 ## Descrição:
 
