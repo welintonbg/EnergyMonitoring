@@ -207,7 +207,7 @@ void loop() {
 
 ## Esquema:
 
-![EsquemaLD2410B](./esquemaLD241b.png)
+![EsquemaLD2410B](./esquemaLD24b.png)
 
 ## Instruções de execuções:
 
