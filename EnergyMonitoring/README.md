@@ -165,13 +165,20 @@ void loop() {
 
 ### Pinagem:
 
+Para o ZMPT101B:
+
 | Pino          | Saída      | Pino no ESP32          |
 | ------------- | ---------- | ---------------------- |
 | ${{\color{Red}\Huge{\textsf{  VCC \}}}}\$      | 1          | 5V |
 | ${{\color{Gray}\Huge{\textsf{  GND \}}}}\$      | 2         | GND   |
 | ${{\color{Lime}\Huge{\textsf{  OUT ZMPT101B \}}}}\$       | 3         | 34     |
-| ${{\color{Blue}\Huge{\textsf{  OUT  SCT013\}}}}\$        | 4         | 35      |
 
+Para o SCT013:
+| Pino          | Saída      | Pino no ESP32          |
+| ------------- | ---------- | ---------------------- |
+| ${{\color{Red}\Huge{\textsf{  VCC \}}}}\$      | 1          | 5V |
+| ${{\color{Gray}\Huge{\textsf{  GND \}}}}\$      | 2         | GND   |
+| ${{\color{Blue}\Huge{\textsf{  OUT  SCT013\}}}}\$        | 3       | 35      |
 
 ## Esquema:
 
